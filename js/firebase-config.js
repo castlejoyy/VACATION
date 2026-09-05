@@ -9,11 +9,11 @@
 // 값을 채우기 전까지 이 앱은 자동으로 "로컬 저장 모드"로 동작합니다.
 // (이 브라우저에만 저장되고, 다른 사람과 실시간 공유는 되지 않아요)
 window.FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCExkQFkfigdNUs_8QrD8xT163Jwhjj3-c",
+  authDomain: "vacation-planner-a8a7f.firebaseapp.com",
+  databaseURL: "https://vacation-planner-a8a7f-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "vacation-planner-a8a7f",
+  storageBucket: "vacation-planner-a8a7f.firebasestorage.app",
+  messagingSenderId: "1034687034308",
+  appId: "1:1034687034308:web:f60c4e47c0a37d45faaa91"
 };
