@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>여행 계획표</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 잠금 화면 -->
+  <div id="lockScreen" class="lock-screen">
+    <div class="lock-card">
+      <h1>🧳 여행 계획표</h1>
+      <p class="lock-desc">공유받은 접속 암호를 입력하세요.</p>
+      <input type="password" id="passcodeInput" placeholder="암호 입력" autocomplete="off" inputmode="text">
+      <button id="unlockBtn">입장하기</button>
+      <p id="lockMsg" class="lock-msg"></p>
+      <p class="lock-hint">암호를 아는 사람만 같은 계획표를 보고 실시간으로 함께 수정할 수 있어요.</p>
+    </div>
+  </div>
+
+  <!-- 메인 앱 -->
+  <div id="app" class="app hidden">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <button id="tripSwitchTrigger" class="trip-name-btn" title="여행 목록 열기">
+          <h1 id="tripNameDisplay" class="trip-name">여행 계획표</h1>
+          <span class="trip-caret">▾</span>
+        </button>
+        <span id="syncStatus" class="sync-status">연결 중…</span>
+      </div>
+      <div class="topbar-right">
+        <button id="tripsBtn" class="icon-btn" title="여행 목록">🗂️</button>
+        <button id="settingsBtn" class="icon-btn" title="여행 설정">⚙️</button>
+        <button id="lockBtn" class="icon-btn" title="잠금">🔒</button>
+      </div>
+    </header>
+
+    <nav class="main-tabs">
+      <button class="main-tab active" data-view="schedule">📅 일정표</button>
+      <button class="main-tab" data-view="stay">🏨 숙소 정보</button>
+      <button class="main-tab" data-view="places">📍 주변 정보</button>
+    </nav>
+
+    <!-- 일정표 뷰 -->
+    <section id="view-schedule" class="view active">
+      <div class="plan-tabs-row">
+        <div id="planTabs" class="plan-tabs"></div>
+        <button id="addPlanBtn" class="add-plan-btn">＋ 대안 추가</button>
+        <button id="mergeModeBtn" class="add-plan-btn">🔗 칸 합치기</button>
+        <button id="mergeConfirmBtn" class="add-plan-btn hidden">✅ 합치기</button>
+      </div>
+      <p id="mergeHint" class="merge-hint hidden">합치고 싶은 칸들을 몇 개든 순서 상관없이 탭해서 선택한 뒤 "✅ 합치기"를 누르세요. (같은 날짜 세로줄 안에서만 가능) 이미 합쳐진 칸을 탭하면 바로 다시 나눠져요.</p>
+      <div class="grid-wrap">
+        <table id="scheduleTable" class="schedule-table">
+          <thead><tr id="scheduleHead"></tr></thead>
+          <tbody id="scheduleBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 숙소 정보 뷰 -->
+    <section id="view-stay" class="view">
+      <div class="stay-list" id="stayList"></div>
+      <button id="addStayBtn" class="add-stay-btn">＋ 숙소 추가</button>
+    </section>
+
+    <!-- 주변 정보(식당/가볼만한 곳) 뷰 -->
+    <section id="view-places" class="view">
+      <div class="stay-list" id="placeList"></div>
+      <button id="addPlaceBtn" class="add-stay-btn">＋ 장소 추가</button>
+    </section>
+
+  </div>
+
+  <!-- 설정 모달 -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-card">
+      <h2>여행 설정</h2>
+      <label>여행 이름
+        <input type="text" id="cfgTripName" placeholder="예: 9월 제주 여행">
+      </label>
+      <label>시작 날짜
+        <input type="date" id="cfgStartDate" min="2026-01-01" max="2026-12-31">
+      </label>
+      <label>여행 일수
+        <input type="number" id="cfgDays" min="1" max="14" step="1">
+      </label>
+      <div class="hour-row">
+        <label>시작 시각
+          <input type="number" id="cfgStartHour" min="0" max="23" step="1">
+        </label>
+        <label>종료 시각
+          <input type="number" id="cfgEndHour" min="1" max="30" step="1">
+        </label>
+      </div>
+      <p class="hint">종료 시각이 24보다 크면 다음날 새벽까지(예: 26시 = 다음날 02시) 계획할 수 있어요.</p>
+      <div class="modal-actions">
+        <button id="cfgCancel" class="btn-secondary">취소</button>
+        <button id="cfgSave" class="btn-primary">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 여행 목록 모달 -->
+  <div id="tripsModal" class="modal hidden">
+    <div class="modal-card">
+      <h2>내 여행 목록</h2>
+      <div id="tripsListArea" class="trips-list-area"></div>
+      <button id="newTripBtn" class="add-stay-btn">＋ 새 여행 만들기</button>
+      <div class="modal-actions">
+        <button id="tripsModalClose" class="btn-secondary" style="flex:none; width:100%;">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 계획표 칸 ↔ 숙소/부가시설/주변정보 연결 모달 -->
+  <div id="linkModal" class="modal hidden">
+    <div class="modal-card">
+      <h2 id="linkModalTitle">장소 연결</h2>
+      <div id="linkModalBody" class="link-modal-body"></div>
+      <div class="modal-actions">
+        <button id="linkModalClose" class="btn-secondary" style="flex:none; width:100%;">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 숙소 카드 템플릿 (JS에서 복제해서 사용) -->
+  <template id="stayCardTpl">
+    <div class="stay-card" data-id="">
+      <div class="stay-card-head">
+        <input type="text" class="stay-name" placeholder="숙소 이름">
+        <button class="remove-btn stay-remove" title="숙소 삭제">🗑</button>
+      </div>
+      <input type="text" class="stay-location" placeholder="위치 / 주소">
+      <div class="stay-times">
+        <label>체크인 <input type="time" class="stay-checkin"></label>
+        <label>체크아웃 <input type="time" class="stay-checkout"></label>
+      </div>
+      <div class="facility-section">
+        <div class="facility-list"></div>
+        <button class="add-facility-btn">＋ 부가시설 추가</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- 부가시설 행 템플릿 -->
+  <template id="facilityRowTpl">
+    <div class="facility-row" data-id="">
+      <div class="facility-reorder">
+        <button class="reorder-btn facility-up" title="위로 이동">▲</button>
+        <button class="reorder-btn facility-down" title="아래로 이동">▼</button>
+      </div>
+      <input type="text" class="facility-name" placeholder="시설명 (예: 조식, 수영장)">
+      <input type="text" class="facility-time" placeholder="이용시간 (예: 07:00-09:00)">
+      <input type="text" class="facility-details" placeholder="세부내용">
+      <button class="remove-btn facility-remove" title="삭제">🗑</button>
+    </div>
+  </template>
+
+  <!-- 주변 정보(식당/가볼만한 곳) 카드 템플릿 -->
+  <template id="placeCardTpl">
+    <div class="stay-card place-card" data-id="">
+      <div class="stay-card-head">
+        <input type="text" class="place-name" placeholder="이름 (예: OO식당, OO해변)">
+        <button class="remove-btn place-remove" title="삭제">🗑</button>
+      </div>
+      <div class="place-row2">
+        <select class="place-category">
+          <option value="식당">🍴 식당</option>
+          <option value="카페">☕ 카페</option>
+          <option value="명소">📍 가볼만한 곳</option>
+          <option value="기타">기타</option>
+        </select>
+        <input type="text" class="place-location" placeholder="위치 / 주소">
+      </div>
+      <input type="text" class="place-hours" placeholder="영업시간/이용시간 (예: 11:00-21:00, 화요일 휴무)">
+      <textarea class="place-details" rows="2" placeholder="세부내용/메모 (추천메뉴, 예약 필요 여부 등)"></textarea>
+    </div>
+  </template>
+
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
